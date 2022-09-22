@@ -80,7 +80,7 @@ A página web dessa vez não está sendo exibida corretamente. Verifique as **co
 
 A regra do grupo de segurança estava configurada com um intervalo(81-8080) de portas diferente do que a instancia EC2 estava escutando(80). A Origem também estava configurada para 0.0.0.0/1, alterado para 0.0.0.0/0. 
 
-![Após editar a regra foi possível acessar](2-Networking.png)
+![Após editar a regra foi possível acessar](imgs\2-Networking.png)
 
 ## 3 - EC2 Access
 
@@ -100,7 +100,7 @@ $ ssh-keygen -y -f desafio-aws.pem
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOspjTbxjIORKZ8klztW3CBOPBNmAyLK2fseT6cZs4Qg
 ```
 
-![Gerenciador de Sessões](3-EC2Access.png)
+![Gerenciador de Sessões](imgs\3-EC2Access.png)
 
 
 Após trocar a key pair
@@ -137,7 +137,7 @@ $ cat /var/www/html/index.html
 <html><body><h1>Formando DevOps - EC2 Rodando na Region: us-east-1<h1></body></html>
 $ sudo sed -i 's/Formando/Euclides A. de Castro Jr - Formando/' /var/www/html/index.html 
 ```
-![web após edição](3.2-web.png)
+![web após edição](imgs\3.2-web.png)
 
 ## 4 - EC2 troubleshooting
 
