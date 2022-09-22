@@ -63,7 +63,7 @@ aws cloudformation wait stack-create-complete --stack-name "$STACK_NAME"
 ```
 **`Resposta:`**
 ```bash
-$ aws cloudformation delete-stack --region us-east-1 --stack-name "$STACK_NAME"
+
 $ export STACK_NAME="stack-desafio"
 $ export STACK_FILE="file://formandodevops-desafio-aws.json"
 $ aws cloudformation create-stack --region us-east-1 --template-body "$STACK_FILE" --stack-name "$STACK_NAME" --no-cli-pager
@@ -80,6 +80,58 @@ A página web dessa vez não está sendo exibida corretamente. Verifique as **co
 
 A regra do grupo de segurança estava configurada com um intervalo(81-8080) de portas diferente do que a instancia EC2 estava escutando(80). A Origem também estava configurada para 0.0.0.0/1, alterado para 0.0.0.0/0. 
 
+```
+$ aws ec2 describe-security-groups --group-ids sg-05c2d8d0abcf12a05
+SecurityGroups:
+- Description: Enable HTTP from 0.0.0.0/0
+  GroupId: sg-05c2d8d0abcf12a05
+  GroupName: stack-desafio-WebServerSecurityGroup-9M26RZM6K3UN
+  IpPermissions:
+  - FromPort: 81
+    IpProtocol: tcp
+    IpRanges:
+    - CidrIp: 0.0.0.0/1
+    Ipv6Ranges: []
+    PrefixListIds: []
+    ToPort: 8080
+```
+```
+$ aws ec2 describe-security-group-rules --filters Name="group-id",Values="sg-05c2d8d0abcf12a05"
+SecurityGroupRules:
+SecurityGroupRules:
+- CidrIpv4: 0.0.0.0/0
+  FromPort: -1
+  GroupId: sg-05c2d8d0abcf12a05
+  GroupOwnerId: '200322718302'
+  IpProtocol: '-1'
+  IsEgress: true
+  SecurityGroupRuleId: sgr-010df61c369977117
+  GroupOwnerId: '200322718302'
+SecurityGroupRules:
+- CidrIpv4: 0.0.0.0/0
+  FromPort: -1
+  GroupId: sg-05c2d8d0abcf12a05
+  GroupOwnerId: '200322718302'
+  IpProtocol: '-1'
+  IsEgress: true
+  SecurityGroupRuleId: sgr-010df61c369977117
+  Tags: []
+  ToPort: -1
+- CidrIpv4: 0.0.0.0/0
+  FromPort: 80
+  GroupId: sg-05c2d8d0abcf12a05
+  GroupOwnerId: '200322718302'
+  IpProtocol: tcp
+  IsEgress: false
+  SecurityGroupRuleId: sgr-0c3f17904f724ce25
+  Tags: []
+  ToPort: 80
+```
+```
+$ aws ec2 modify-security-group-rules --group-id sg-05c2d8d0abcf12a05 --security-group-rules SecurityGroupRuleId=sgr-0c3f17904f724ce25,"SecurityGroupRule={FromPort=80,IpProtocol=tcp,CidrIpv4=0.0.0.0/0,ToPort=80}" 
+Return: true
+```
+
 ![Após editar a regra foi possível acessar](imgs\2-Networking.png)
 
 ## 3 - EC2 Access
@@ -92,6 +144,10 @@ Acredito que o jeito mais rápido e fácil é utilizar o "Gerenciador de Sessõe
 Ref: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-quick-setup.html
 
 Habilitado através do "Quick setup" somente na instancia sem a key pair, criado uma nova chave na console aws e liberado a porta 22 para meu IP no security group.
+
+```
+$ aws ec2 authorize-security-group-ingress --group-id sg-05c2d8d0abcf12a05 --protocol tcp --port 22 --cidr 189.61.35.36/32
+```
 
 Para recuperar a chave publica após gerar uma nova:
 
@@ -170,7 +226,7 @@ Na tela de instancias EC2: Ações > Imagem e modelos > Criar uma imagem
 Para criar uma nova instancia a partir de uma AMI customizada:
 Na tela Imagens > AMIs selecionar a AMI recém criada e botão "Executar Instância na AMI"
 Criado um Target Group apontando para as duas instâncias com Health Check
-Criado um Application Load Balancer
+Criado um Application Load Balancer com o listener na porta 80 encaminhando para o Target group
 
 ```
 
@@ -180,3 +236,11 @@ Criado um Application Load Balancer
 Garanta que o acesso para suas EC2 ocorra somente através do balanceador, ou seja, chamadas HTTP diretamente realizadas da sua máquina para o EC2 deverão ser barradas. Elas **só aceitarão chamadas do balanceador** e esse, por sua vez, aceitará conexões externas normalmente.
 
 **`Resposta:`**
+```
+Criado duas novas instancias com a AMI criada anteriormente nas subnets Formando DevOps - AWS Challenge Private Subnet (AZ1) e Formando DevOps - AWS Challenge Private Subnet (AZ2) e alterado target group para apontar para essas duas novas e removido as duas antigas.
+```
+
+![Lista das EC2 na subnet privada](imgs\EC2-privadas.png)
+![Targets do Target Group](imgs\TargetGroup.png)
+![Load Balance](imgs\LoadBalance.png)
+![Teste do LB](imgs\acessandoLB.png)
