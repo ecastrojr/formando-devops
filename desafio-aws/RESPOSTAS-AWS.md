@@ -132,7 +132,7 @@ $ aws ec2 modify-security-group-rules --group-id sg-05c2d8d0abcf12a05 --security
 Return: true
 ```
 
-![Após editar a regra foi possível acessar](imgs\2-Networking.png)
+![Após editar a regra foi possível acessar](imgs/2-Networking.png)
 
 ## 3 - EC2 Access
 
@@ -156,7 +156,7 @@ $ ssh-keygen -y -f desafio-aws.pem
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOspjTbxjIORKZ8klztW3CBOPBNmAyLK2fseT6cZs4Qg
 ```
 
-![Gerenciador de Sessões](imgs\3-EC2Access.png)
+![Gerenciador de Sessões](imgs/3-EC2Access.png)
 
 
 Após trocar a key pair
@@ -193,7 +193,7 @@ $ cat /var/www/html/index.html
 <html><body><h1>Formando DevOps - EC2 Rodando na Region: us-east-1<h1></body></html>
 $ sudo sed -i 's/Formando/Euclides A. de Castro Jr - Formando/' /var/www/html/index.html 
 ```
-![web após edição](imgs\3.2-web.png)
+![web após edição](imgs/3.2-web.png)
 
 ## 4 - EC2 troubleshooting
 
@@ -240,7 +240,7 @@ Garanta que o acesso para suas EC2 ocorra somente através do balanceador, ou se
 Criado duas novas instancias com a AMI criada anteriormente nas subnets Formando DevOps - AWS Challenge Private Subnet (AZ1) e Formando DevOps - AWS Challenge Private Subnet (AZ2) e alterado target group para apontar para essas duas novas e removido as duas antigas.
 ```
 
-![Lista das EC2 na subnet privada](imgs\EC2-privadas.png)
-![Targets do Target Group](imgs\TargetGroup.png)
-![Load Balance](imgs\LoadBalance.png)
-![Teste do LB](imgs\acessandoLB.png)
+![Lista das EC2 na subnet privada](imgs/EC2-privadas.png)
+![Targets do Target Group](imgs/TargetGroup.png)
+![Load Balance](imgs/LoadBalance.png)
+![Teste do LB](imgs/acessandoLB.png)
