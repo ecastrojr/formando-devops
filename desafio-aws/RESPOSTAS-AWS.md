@@ -80,8 +80,10 @@ A página web dessa vez não está sendo exibida corretamente. Verifique as **co
 
 A regra do grupo de segurança estava configurada com um intervalo(81-8080) de portas diferente do que a instancia EC2 estava escutando(80). A Origem também estava configurada para 0.0.0.0/1, alterado para 0.0.0.0/0. 
 
-```
-$ aws ec2 describe-security-groups --group-ids sg-05c2d8d0abcf12a05
+```bash
+# Listando o security group
+$ aws ec2 describe-security-groups --no-cli-pager
+$ aws ec2 describe-security-groups --group-ids sg-05c2d8d0abcf12a05 --no-cli-pager
 SecurityGroups:
 - Description: Enable HTTP from 0.0.0.0/0
   GroupId: sg-05c2d8d0abcf12a05
@@ -95,8 +97,9 @@ SecurityGroups:
     PrefixListIds: []
     ToPort: 8080
 ```
-```
-$ aws ec2 describe-security-group-rules --filters Name="group-id",Values="sg-05c2d8d0abcf12a05"
+```bash
+# Pegando o Security group Rule ID
+$ aws ec2 describe-security-group-rules --filters Name="group-id",Values="sg-05c2d8d0abcf12a05" --no-cli-pager
 SecurityGroupRules:
 SecurityGroupRules:
 - CidrIpv4: 0.0.0.0/0
@@ -127,11 +130,12 @@ SecurityGroupRules:
   Tags: []
   ToPort: 80
 ```
-```
-$ aws ec2 modify-security-group-rules --group-id sg-05c2d8d0abcf12a05 --security-group-rules SecurityGroupRuleId=sgr-0c3f17904f724ce25,"SecurityGroupRule={FromPort=80,IpProtocol=tcp,CidrIpv4=0.0.0.0/0,ToPort=80}" 
+```bash
+#Executando o comando para corrigir a regra
+$ aws ec2 modify-security-group-rules --group-id sg-05c2d8d0abcf12a05 --security-group-rules\
+ SecurityGroupRuleId=sgr-0c3f17904f724ce25,"SecurityGroupRule={FromPort=80,IpProtocol=tcp,CidrIpv4=0.0.0.0/0,ToPort=80}" --no-cli-pager
 Return: true
 ```
-
 ![Após editar a regra foi possível acessar](imgs/2-Networking.png)
 
 ## 3 - EC2 Access
@@ -139,14 +143,34 @@ Return: true
 Para acessar a EC2 por SSH, você precisa de uma *key pair*, que **não está disponível**. Pesquise como alterar a key pair de uma EC2.
 
 **`Resposta:`**
-Acredito que o jeito mais rápido e fácil é utilizar o "Gerenciador de Sessões".
+Acredito que o jeito mais rápido e fácil é utilizar o "Gerenciador de Sessões" na console AWS.
 
 Ref: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-quick-setup.html
 
-Habilitado através do "Quick setup" somente na instancia sem a key pair, criado uma nova chave na console aws e liberado a porta 22 para meu IP no security group.
+Habilitado através do "Quick setup" do Systems Manager, somente na instancia sem a key pair, criado uma nova chave na console aws e liberado a porta 22 para meu IP no security group.
+
+
+
+
+Enquanto espera aplicar as politicas acima
 
 ```
+# Pegando meu ip local
+curl http://checkip.amazonaws.com
+  189.61.35.36
+# Habilitando o acesso através da porta 22 para o meu ip local
 $ aws ec2 authorize-security-group-ingress --group-id sg-05c2d8d0abcf12a05 --protocol tcp --port 22 --cidr 189.61.35.36/32
+```
+Gerado uma nova chave pem no console da AWS
+```bash
+$ aws ec2 create-key-pair \
+    --key-name desafio-aws2.pem \
+    --key-type ed25519 \
+    --key-format pem \
+    --query "KeyMaterial" \
+    --output text > desafio-aws2.pem
+# Limitando acesso na chave
+$ chmod 400 desafio-aws.pem
 ```
 
 Para recuperar a chave publica após gerar uma nova:
@@ -155,6 +179,8 @@ Para recuperar a chave publica após gerar uma nova:
 $ ssh-keygen -y -f desafio-aws.pem
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOspjTbxjIORKZ8klztW3CBOPBNmAyLK2fseT6cZs4Qg
 ```
+
+Acessando instancia através do "Gerenciado de sessões" no botão de "conectar" na página da instancia EC2
 
 ![Gerenciador de Sessões](imgs/3-EC2Access.png)
 
@@ -189,8 +215,10 @@ Run "sudo yum update" to apply all updates.
 
 **`Resposta:`**
 ```bash
+# Verificando conteúdo do arquivo index.html
 $ cat /var/www/html/index.html
 <html><body><h1>Formando DevOps - EC2 Rodando na Region: us-east-1<h1></body></html>
+# Inserindo o meu nome no inicio do texto
 $ sudo sed -i 's/Formando/Euclides A. de Castro Jr - Formando/' /var/www/html/index.html 
 ```
 ![web após edição](imgs/3.2-web.png)
@@ -201,16 +229,19 @@ No último procedimento, A EC2 precisou ser desligada e após isso o serviço re
 
 **`Resposta:`**
 
-Não foi necessário desligar o servidor para alterar a key pair, mas reiniciei manualmente para causar a falha.
+Como não foi necessário desligar o servidor para alterar a key pair, reiniciei manualmente para causar a falha.
 
 ```bash
+# Verificado que o serviço httpd estava como "disabled"
 $ sudo systemctl status httpd
 ● httpd.service - The Apache HTTP Server
    Loaded: loaded (/usr/lib/systemd/system/httpd.service; disabled; vendor preset: disabled)
    Active: inactive (dead)
      Docs: man:httpd.service(8)
+# Habilitando o serviço
 $ sudo systemctl enable httpd
 Created symlink from /etc/systemd/system/multi-user.target.wants/httpd.service to /usr/lib/systemd/system/httpd.service.
+# Iniciando o serviço
 $ sudo systemctl start httpd
 ```
 
@@ -220,15 +251,31 @@ Crie uma cópia idêntica de sua EC2 e inicie essa segunda EC2. Após isso, crie
 
 **`Resposta:`**
 
-```
+
 Para criar uma Imagens de máquina da Amazon (AMIs)
 Na tela de instancias EC2: Ações > Imagem e modelos > Criar uma imagem
+``` bash  
+$ aws ec2 create-image \
+    --instance-id i-0a6442bc7bfd126f7 \
+    --name "Formando Devops - Desafio AWS" \
+    --description "AIM para Desafio AWS"     
+```
 Para criar uma nova instancia a partir de uma AMI customizada:
 Na tela Imagens > AMIs selecionar a AMI recém criada e botão "Executar Instância na AMI"
+
+``` bash
+$ aws ec2 run-instances --image-id ami-0d3b6e05cd4460ef3 \
+--count 1 --instance-type t2.micro \
+--key-name desafio-aws \
+--security-group-ids sg-09ba06292a6226557\
+ --subnet-id subnet-07c2fc4aa754f9c5f
+```
+$ aws ec2 terminate-instances --instance-ids i-0d15a3523718aa3a1
+
 Criado um Target Group apontando para as duas instâncias com Health Check
 Criado um Application Load Balancer com o listener na porta 80 encaminhando para o Target group
 
-```
+
 
 
 ## 6 - Segurança
