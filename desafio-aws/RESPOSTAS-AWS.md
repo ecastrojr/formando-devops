@@ -145,30 +145,42 @@ Para acessar a EC2 por SSH, você precisa de uma *key pair*, que **não está di
 **`Resposta:`**
 Acredito que o jeito mais rápido e fácil é utilizar o "Gerenciador de Sessões" na console AWS.
 
-Ref: https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-quick-setup.html
+Criando a Role e atribuindo a politica:
 
-Habilitado através do "Quick setup" do Systems Manager, somente na instancia sem a key pair, criado uma nova chave na console aws e liberado a porta 22 para meu IP no security group.
+No serviço IAM, em Funções, clicar em "Criar função" e selecione EC2:
+
+![Criando função / Role](imgs/criando_role.png)
+
+Procure por **AmazonSSMManagedInstanceCore**
+
+![Atribuindo politica na role](imgs/atribuindo_politica.png)
 
 
+Adicionando a nova role IAM na instância EC2:
+
+![Atribuindo politica na role](imgs/funcao_iam.png)
+
+![Atribuindo politica na role](imgs/funcao_iam2.png)
 
 
-Enquanto espera aplicar as politicas acima
+Enquanto espera aplicar as politicas acima, vamos liberar a porta 22 no Security Group e criar um novo par de chave.
 
-```
+``` bash
 # Pegando meu ip local
 curl http://checkip.amazonaws.com
   189.61.35.36
 # Habilitando o acesso através da porta 22 para o meu ip local
 $ aws ec2 authorize-security-group-ingress --group-id sg-05c2d8d0abcf12a05 --protocol tcp --port 22 --cidr 189.61.35.36/32
 ```
-Gerado uma nova chave pem no console da AWS
-```bash
+
+``` bash
+# Gerado um novo par de  chave pem na AWS
 $ aws ec2 create-key-pair \
-    --key-name desafio-aws2.pem \
+    --key-name desafio-aws.pem \
     --key-type ed25519 \
     --key-format pem \
     --query "KeyMaterial" \
-    --output text > desafio-aws2.pem
+    --output text > desafio-aws.pem
 # Limitando acesso na chave
 $ chmod 400 desafio-aws.pem
 ```
@@ -180,10 +192,23 @@ $ ssh-keygen -y -f desafio-aws.pem
 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOspjTbxjIORKZ8klztW3CBOPBNmAyLK2fseT6cZs4Qg
 ```
 
-Acessando instancia através do "Gerenciado de sessões" no botão de "conectar" na página da instancia EC2
+Acessando instancia através do "Gerenciador de sessões" no botão de "conectar" na página da instancia EC2
 
 ![Gerenciador de Sessões](imgs/3-EC2Access.png)
 
+ou pelo aws cli
+
+```bash
+$ aws ssm start-session --target i-0a722b97ff1bcba26                                                             
+Starting session with SessionId: adm.x-09225f4fe58f3ee46
+$ sudo -i
+$ cd /home/ec2-user/.ssh/
+$ cat authorized_keys 
+$ echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOspjTbxjIORKZ8klztW3CBOPBNmAyLK2fseT6cZs4Qg" > authorized_keys 
+$ ll
+total 4
+-rw------- 1 ec2-user ec2-user 81 Sep 28 18:24 authorized_keys
+```
 
 Após trocar a key pair
 
@@ -194,6 +219,7 @@ ssh -i [sua-key-pair] ec2-user@[ip-ec2]
 
 **`Resposta:`**
 ```bash
+#Acessando pelo ssh utilizando a chave gerada anteriormente
 ssh -i desafio-aws.pem ec2-user@18.204.4.2
 The authenticity of host '18.204.4.2 (18.204.4.2)' cant be established.
 ED25519 key fingerprint is SHA256:Eu2bY3yBL8/cH3VaTnElgoCQiWX5f11dAQET/Cxiroo.
@@ -255,6 +281,7 @@ Crie uma cópia idêntica de sua EC2 e inicie essa segunda EC2. Após isso, crie
 Para criar uma Imagens de máquina da Amazon (AMIs)
 Na tela de instancias EC2: Ações > Imagem e modelos > Criar uma imagem
 ``` bash  
+# Criando uma imagem AMI baseado na instancia
 $ aws ec2 create-image \
     --instance-id i-0a6442bc7bfd126f7 \
     --name "Formando Devops - Desafio AWS" \
@@ -264,18 +291,61 @@ Para criar uma nova instancia a partir de uma AMI customizada:
 Na tela Imagens > AMIs selecionar a AMI recém criada e botão "Executar Instância na AMI"
 
 ``` bash
-$ aws ec2 run-instances --image-id ami-0d3b6e05cd4460ef3 \
+# Criando uma nova instancia com a AMI criada
+$ aws ec2 run-instances --image-id ami-06418f0c0c498df8c \
 --count 1 --instance-type t2.micro \
 --key-name desafio-aws \
---security-group-ids sg-09ba06292a6226557\
- --subnet-id subnet-07c2fc4aa754f9c5f
+--subnet-id subnet-0052d2f77e47162f6 \
+--security-group-ids sg-0ad7cf46a60614f07 \
+--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=Formando DevOps - AWS Challenge EC2 - 2}]'
 ```
-$ aws ec2 terminate-instances --instance-ids i-0d15a3523718aa3a1
 
 Criado um Target Group apontando para as duas instâncias com Health Check
+
+```bash
+#Criando o target group com o health check.
+aws elbv2 create-target-group \
+    --name desafio-aws \
+    --protocol HTTP \
+    --port 80 \
+    --target-type instance \
+    --vpc-id vpc-01173b40a16c551b1 --no-cli-pager
+
+TargetGroups:
+- HealthCheckEnabled: true
+  HealthCheckIntervalSeconds: 30
+  HealthCheckPath: /
+  HealthCheckPort: traffic-port
+  HealthCheckProtocol: HTTP
+  HealthCheckTimeoutSeconds: 5
+  HealthyThresholdCount: 5
+  IpAddressType: ipv4
+  Matcher:
+    HttpCode: '200'
+  Port: 80
+  Protocol: HTTP
+  ProtocolVersion: HTTP1
+  TargetGroupArn: arn:aws:elasticloadbalancing:us-east-1:200322718302:targetgroup/desafio-aws/6a93b7531df2a38b
+  TargetGroupName: desafio-aws
+  TargetType: instance
+  UnhealthyThresholdCount: 2
+  VpcId: vpc-01173b40a16c551b1
+
+# Registrando as duas instancias no target group
+$ aws elbv2 register-targets --target-group-arn arn:aws:elasticloadbalancing:us-east-1:200322718302:targetgroup/desafio-aws/6a93b7531df2a38b \
+--targets Id=i-01062f7dfa4af1969 Id=i-0a722b97ff1bcba26
+```
 Criado um Application Load Balancer com o listener na porta 80 encaminhando para o Target group
 
-
+```bash
+# Criando o load balance
+$ aws elbv2 create-load-balancer --name lb-desafio  \
+--subnets subnet-0513c130d7b1c49d3 subnet-0052d2f77e47162f6 --security-groups sg-0ad7cf46a60614f07
+# Apontando o load balance para o target group
+$ aws elbv2 create-listener --load-balancer-arn arn:aws:elasticloadbalancing:us-east-1:200322718302:loadbalancer/app/lb-desafio/c10cb070ade5d38d \
+--protocol HTTP --port 80  \
+--default-actions Type=forward,TargetGroupArn=arn:aws:elasticloadbalancing:us-east-1:200322718302:targetgroup/desafio-aws/6a93b7531df2a38b
+```
 
 
 ## 6 - Segurança
@@ -283,10 +353,36 @@ Criado um Application Load Balancer com o listener na porta 80 encaminhando para
 Garanta que o acesso para suas EC2 ocorra somente através do balanceador, ou seja, chamadas HTTP diretamente realizadas da sua máquina para o EC2 deverão ser barradas. Elas **só aceitarão chamadas do balanceador** e esse, por sua vez, aceitará conexões externas normalmente.
 
 **`Resposta:`**
-```
-Criado duas novas instancias com a AMI criada anteriormente nas subnets Formando DevOps - AWS Challenge Private Subnet (AZ1) e Formando DevOps - AWS Challenge Private Subnet (AZ2) e alterado target group para apontar para essas duas novas e removido as duas antigas.
-```
 
+Criado duas novas instancias com a AMI criada anteriormente nas subnets Formando DevOps - AWS Challenge Private Subnet (AZ1) e Formando DevOps - AWS Challenge Private Subnet (AZ2) e alterado target group para apontar para essas duas novas e removido as duas antigas.
+``` bash
+# Criando as novas instancias EC2 nas subnets privadas
+$ aws ec2 run-instances --image-id ami-06418f0c0c498df8c \
+--count 1 --instance-type t2.micro \
+--key-name desafio-aws \
+--subnet-id subnet-0d23ecd48fa7d8d35 \
+--security-group-ids sg-0ad7cf46a60614f07 \
+--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=Formando DevOps - AWS Challenge EC2 - Priv 1}]'
+
+$ aws ec2 run-instances --image-id ami-06418f0c0c498df8c \
+--count 1 --instance-type t2.micro \
+--key-name desafio-aws \
+--subnet-id subnet-0bf278d84482dbf29 \
+--security-group-ids sg-0ad7cf46a60614f07 \
+--tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=Formando DevOps - AWS Challenge EC2 - Priv 2}]'
+
+# Adicionando as novas instancias na subnet privada ao target group
+$ aws elbv2 register-targets --target-group-arn arn:aws:elasticloadbalancing:us-east-1:200322718302:targetgroup/desafio-aws/6a93b7531df2a38b \
+--targets Id=i-0df1e4a3ff3939b3b Id=i-0271651bcc6c0c0c9
+
+# Removando instancias com ip publico do target group
+$ aws elbv2 deregister-targets \
+    --target-group-arn arn:aws:elasticloadbalancing:us-east-1:200322718302:targetgroup/desafio-aws/6a93b7531df2a38b \
+    --targets Id=i-01062f7dfa4af1969 Id=i-0a722b97ff1bcba26
+
+# Deletando instancias com IP Publico
+$ aws ec2 terminate-instances --instance-ids i-0a722b97ff1bcba26 i-01062f7dfa4af1969
+```
 ![Lista das EC2 na subnet privada](imgs/EC2-privadas.png)
 ![Targets do Target Group](imgs/TargetGroup.png)
 ![Load Balance](imgs/LoadBalance.png)
