@@ -78,7 +78,7 @@ A página web dessa vez não está sendo exibida corretamente. Verifique as **co
 
 **`Resposta:`**
 
-A regra do grupo de segurança estava configurada com um intervalo(81-8080) de portas diferente do que a instancia EC2 estava escutando(80). A Origem também estava configurada para 0.0.0.0/1, alterado para 0.0.0.0/0. 
+A regra do grupo de segurança estava configurada com  portas diferentes(81-8080) do que a instancia EC2 estava escutando(80). A Origem também estava configurada para 0.0.0.0/1, alterado para 0.0.0.0/0. 
 
 ```bash
 # Listando o security group
@@ -100,36 +100,12 @@ SecurityGroups:
 ```bash
 # Pegando o Security group Rule ID
 $ aws ec2 describe-security-group-rules --filters Name="group-id",Values="sg-05c2d8d0abcf12a05" --no-cli-pager
-SecurityGroupRules:
-SecurityGroupRules:
-- CidrIpv4: 0.0.0.0/0
-  FromPort: -1
-  GroupId: sg-05c2d8d0abcf12a05
-  GroupOwnerId: '200322718302'
-  IpProtocol: '-1'
-  IsEgress: true
-  SecurityGroupRuleId: sgr-010df61c369977117
-  GroupOwnerId: '200322718302'
-SecurityGroupRules:
-- CidrIpv4: 0.0.0.0/0
-  FromPort: -1
-  GroupId: sg-05c2d8d0abcf12a05
-  GroupOwnerId: '200322718302'
-  IpProtocol: '-1'
-  IsEgress: true
-  SecurityGroupRuleId: sgr-010df61c369977117
-  Tags: []
-  ToPort: -1
-- CidrIpv4: 0.0.0.0/0
-  FromPort: 80
   GroupId: sg-05c2d8d0abcf12a05
   GroupOwnerId: '200322718302'
   IpProtocol: tcp
   IsEgress: false
   SecurityGroupRuleId: sgr-0c3f17904f724ce25
-  Tags: []
-  ToPort: 80
-```
+ ```
 ```bash
 #Executando o comando para corrigir a regra
 $ aws ec2 modify-security-group-rules --group-id sg-05c2d8d0abcf12a05 --security-group-rules\
@@ -354,7 +330,7 @@ Garanta que o acesso para suas EC2 ocorra somente através do balanceador, ou se
 
 **`Resposta:`**
 
-Criado duas novas instancias com a AMI criada anteriormente nas subnets Formando DevOps - AWS Challenge Private Subnet (AZ1) e Formando DevOps - AWS Challenge Private Subnet (AZ2) e alterado target group para apontar para essas duas novas e removido as duas antigas.
+Criado duas novas instancias com a AMI criada anteriormente nas subnets Formando DevOps - AWS Challenge Private Subnet (AZ1) e Formando DevOps - AWS Challenge Private Subnet (AZ2). Novas instancias adicionadas como membros do target group e removido as duas antigas.
 ``` bash
 # Criando as novas instancias EC2 nas subnets privadas
 $ aws ec2 run-instances --image-id ami-06418f0c0c498df8c \
@@ -377,13 +353,17 @@ $ aws elbv2 register-targets --target-group-arn arn:aws:elasticloadbalancing:us-
 
 # Removando instancias com ip publico do target group
 $ aws elbv2 deregister-targets \
-    --target-group-arn arn:aws:elasticloadbalancing:us-east-1:200322718302:targetgroup/desafio-aws/6a93b7531df2a38b \
-    --targets Id=i-01062f7dfa4af1969 Id=i-0a722b97ff1bcba26
+--target-group-arn arn:aws:elasticloadbalancing:us-east-1:200322718302:targetgroup/desafio-aws/6a93b7531df2a38b \
+--targets Id=i-01062f7dfa4af1969 Id=i-0a722b97ff1bcba26
 
 # Deletando instancias com IP Publico
 $ aws ec2 terminate-instances --instance-ids i-0a722b97ff1bcba26 i-01062f7dfa4af1969
 ```
-![Lista das EC2 na subnet privada](imgs/EC2-privadas.png)
-![Targets do Target Group](imgs/TargetGroup.png)
-![Load Balance](imgs/LoadBalance.png)
+![Lista das EC2 na subnet privada](imgs/ec2-final.png)
+
+![Targets do Target Group](imgs/tg-targets.png)
+
+![Load Balance](imgs/lb.png)
+
 ![Teste do LB](imgs/acessandoLB.png)
+
