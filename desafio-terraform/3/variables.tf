@@ -7,5 +7,5 @@ variable "nome_aluno" {
 variable "divisor" {
   type        = number
   description = "O divisor"
-  default     = 3
+  #default     = 3
 }
