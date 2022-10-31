@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: balaclava
+  labels:
+    backend: balaclava
+    minhachave: semvalor
+  namespace: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      backend: balaclava
+  template:
+    metadata:
+      labels:
+        backend: balaclava
+        minhachave: semvalor
+    spec:
+      containers:
+      - name: balaclava
+        image: redis
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 6379

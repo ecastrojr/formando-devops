@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: depconfigs
+  namespace: site
+  labels:
+    name: depconfigs
+spec:
+  containers:
+  - name: nginx
+    image: nginx:latest
+    volumeMounts:
+    - name: configsite-vol
+      mountPath: /usr/share/nginx/html/
+    resources:
+      limits:
+        memory: "28Mi"
+        cpu: "50m"
+  volumes:
+  - name: configsite-vol
+    configMap:
+      name: configsite

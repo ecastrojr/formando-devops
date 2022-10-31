@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meu-webserver
+spec:
+  selector:
+    matchLabels:
+      app: meu-webserver
+  template:
+    metadata:
+      labels:
+        app: meu-webserver
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:latest
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+          - containerPort: 80
+        volumeMounts:
+          - name: workdir
+            mountPath: /usr/share/nginx/html
+        startupProbe:
+          exec:
+            command:
+            - cat
+            - /usr/share/nginx/html/index.html
+          failureThreshold: 10
+          periodSeconds: 2
+      initContainers:
+        - name: init
+          image: alpine
+          command: ['sh', '-c', 'echo HelloGetup > /app/index.html']          
+          volumeMounts:
+            - name: workdir
+              mountPath: "/app"
+      dnsPolicy: Default
+      volumes:
+      - name: workdir
+        emptyDir: {}

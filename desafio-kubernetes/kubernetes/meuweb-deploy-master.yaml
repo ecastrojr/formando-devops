@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meuweb
+spec:
+  selector:
+    matchLabels:
+      app: meuweb
+  template:
+    metadata:
+      labels:
+        app: meuweb
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - name: meuweb
+        image: nginx:1.16
+        resources:
+          limits:
+            memory: "64Mi"
+            cpu: "250m"
+        ports:
+        - containerPort: 80
+      nodeSelector:
+        node-role.kubernetes.io/master: ""
