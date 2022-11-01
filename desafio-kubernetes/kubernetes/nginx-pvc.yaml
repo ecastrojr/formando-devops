@@ -1,0 +1,49 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-data
+  namespace: backend
+  labels:
+    app: meusiteset
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meusiteset
+  namespace: backend
+  labels:
+    app: meusiteset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: meusiteset
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: meusiteset
+    spec:
+      containers:
+      - image: nginx
+        name: meusiteset
+        resources:
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pvc-data

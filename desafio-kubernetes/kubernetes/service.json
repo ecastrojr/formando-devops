@@ -1,0 +1,382 @@
+{
+    "apiVersion": "v1",
+    "items": [
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "creationTimestamp": "2022-10-18T02:24:41Z",
+                "labels": {
+                    "component": "apiserver",
+                    "provider": "kubernetes"
+                },
+                "name": "kubernetes",
+                "namespace": "default",
+                "resourceVersion": "205",
+                "uid": "113654f5-659b-43fc-8a1d-c17dbc068588"
+            },
+            "spec": {
+                "clusterIP": "10.96.0.1",
+                "clusterIPs": [
+                    "10.96.0.1"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "https",
+                        "port": 443,
+                        "protocol": "TCP",
+                        "targetPort": 6443
+                    }
+                ],
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "prometheus.io/port": "9153",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2022-10-18T02:24:44Z",
+                "labels": {
+                    "k8s-app": "kube-dns",
+                    "kubernetes.io/cluster-service": "true",
+                    "kubernetes.io/name": "CoreDNS"
+                },
+                "name": "kube-dns",
+                "namespace": "kube-system",
+                "resourceVersion": "300",
+                "uid": "ac99e60d-dd2f-4966-bfb0-6aeb17ba3ee5"
+            },
+            "spec": {
+                "clusterIP": "10.96.0.10",
+                "clusterIPs": [
+                    "10.96.0.10"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "dns",
+                        "port": 53,
+                        "protocol": "UDP",
+                        "targetPort": 53
+                    },
+                    {
+                        "name": "dns-tcp",
+                        "port": 53,
+                        "protocol": "TCP",
+                        "targetPort": 53
+                    },
+                    {
+                        "name": "metrics",
+                        "port": 9153,
+                        "protocol": "TCP",
+                        "targetPort": 9153
+                    }
+                ],
+                "selector": {
+                    "k8s-app": "kube-dns"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"k8s-app\":\"metrics-server\"},\"name\":\"metrics-server\",\"namespace\":\"kube-system\"},\"spec\":{\"ports\":[{\"name\":\"https\",\"port\":443,\"protocol\":\"TCP\",\"targetPort\":\"https\"}],\"selector\":{\"k8s-app\":\"metrics-server\"}}}\n"
+                },
+                "creationTimestamp": "2022-10-18T02:24:48Z",
+                "labels": {
+                    "k8s-app": "metrics-server"
+                },
+                "name": "metrics-server",
+                "namespace": "kube-system",
+                "resourceVersion": "443",
+                "uid": "2e16cf4b-cb81-4d1f-be90-c1054a4c3bd9"
+            },
+            "spec": {
+                "clusterIP": "10.98.123.255",
+                "clusterIPs": [
+                    "10.98.123.255"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "https",
+                        "port": 443,
+                        "protocol": "TCP",
+                        "targetPort": "https"
+                    }
+                ],
+                "selector": {
+                    "k8s-app": "metrics-server"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"k8s-app\":\"dashboard-metrics-scraper\"},\"name\":\"dashboard-metrics-scraper\",\"namespace\":\"kubernetes-dashboard\"},\"spec\":{\"ports\":[{\"port\":8000,\"targetPort\":8000}],\"selector\":{\"k8s-app\":\"dashboard-metrics-scraper\"}}}\n"
+                },
+                "creationTimestamp": "2022-10-18T02:24:50Z",
+                "labels": {
+                    "k8s-app": "dashboard-metrics-scraper"
+                },
+                "name": "dashboard-metrics-scraper",
+                "namespace": "kubernetes-dashboard",
+                "resourceVersion": "472",
+                "uid": "ac4a8cc4-b503-4ee9-833f-a25938ff1e53"
+            },
+            "spec": {
+                "clusterIP": "10.106.4.150",
+                "clusterIPs": [
+                    "10.106.4.150"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "port": 8000,
+                        "protocol": "TCP",
+                        "targetPort": 8000
+                    }
+                ],
+                "selector": {
+                    "k8s-app": "dashboard-metrics-scraper"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{},\"labels\":{\"k8s-app\":\"kubernetes-dashboard\"},\"name\":\"kubernetes-dashboard\",\"namespace\":\"kubernetes-dashboard\"},\"spec\":{\"ports\":[{\"port\":443,\"targetPort\":8443}],\"selector\":{\"k8s-app\":\"kubernetes-dashboard\"}}}\n"
+                },
+                "creationTimestamp": "2022-10-18T02:24:50Z",
+                "labels": {
+                    "k8s-app": "kubernetes-dashboard"
+                },
+                "name": "kubernetes-dashboard",
+                "namespace": "kubernetes-dashboard",
+                "resourceVersion": "21351",
+                "uid": "13cfbf05-b3be-4151-8c4a-924f4812d4f4"
+            },
+            "spec": {
+                "clusterIP": "10.104.204.218",
+                "clusterIPs": [
+                    "10.104.204.218"
+                ],
+                "externalTrafficPolicy": "Cluster",
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "nodePort": 32148,
+                        "port": 443,
+                        "protocol": "TCP",
+                        "targetPort": 8443
+                    }
+                ],
+                "selector": {
+                    "k8s-app": "kubernetes-dashboard"
+                },
+                "sessionAffinity": "None",
+                "type": "NodePort"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{\"prometheus.io/scrape\":\"true\"},\"labels\":{\"app.kubernetes.io/created-by\":\"resource-stack\",\"app.kubernetes.io/managed-by\":\"Lens\",\"app.kubernetes.io/name\":\"lens-metrics\",\"name\":\"kube-state-metrics\"},\"name\":\"kube-state-metrics\",\"namespace\":\"lens-metrics\"},\"spec\":{\"ports\":[{\"name\":\"metrics\",\"port\":8080,\"protocol\":\"TCP\",\"targetPort\":8080}],\"selector\":{\"name\":\"kube-state-metrics\"}}}\n",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2022-10-25T01:06:42Z",
+                "labels": {
+                    "app.kubernetes.io/created-by": "resource-stack",
+                    "app.kubernetes.io/managed-by": "Lens",
+                    "app.kubernetes.io/name": "lens-metrics",
+                    "name": "kube-state-metrics"
+                },
+                "name": "kube-state-metrics",
+                "namespace": "lens-metrics",
+                "resourceVersion": "131070",
+                "uid": "4f6e6759-b6d6-41bf-a9c7-ade82418d6a0"
+            },
+            "spec": {
+                "clusterIP": "10.110.102.43",
+                "clusterIPs": [
+                    "10.110.102.43"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "metrics",
+                        "port": 8080,
+                        "protocol": "TCP",
+                        "targetPort": 8080
+                    }
+                ],
+                "selector": {
+                    "name": "kube-state-metrics"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{\"prometheus.io/scrape\":\"true\"},\"labels\":{\"app.kubernetes.io/created-by\":\"resource-stack\",\"app.kubernetes.io/managed-by\":\"Lens\",\"app.kubernetes.io/name\":\"lens-metrics\"},\"name\":\"node-exporter\",\"namespace\":\"lens-metrics\"},\"spec\":{\"clusterIP\":\"None\",\"ports\":[{\"name\":\"metrics\",\"port\":80,\"protocol\":\"TCP\",\"targetPort\":9100}],\"selector\":{\"name\":\"node-exporter\",\"phase\":\"prod\"},\"type\":\"ClusterIP\"}}\n",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2022-10-25T01:06:42Z",
+                "labels": {
+                    "app.kubernetes.io/created-by": "resource-stack",
+                    "app.kubernetes.io/managed-by": "Lens",
+                    "app.kubernetes.io/name": "lens-metrics"
+                },
+                "name": "node-exporter",
+                "namespace": "lens-metrics",
+                "resourceVersion": "131102",
+                "uid": "687e23a8-d297-4083-928e-93fb0ee2a804"
+            },
+            "spec": {
+                "clusterIP": "None",
+                "clusterIPs": [
+                    "None"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "metrics",
+                        "port": 80,
+                        "protocol": "TCP",
+                        "targetPort": 9100
+                    }
+                ],
+                "selector": {
+                    "name": "node-exporter",
+                    "phase": "prod"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        },
+        {
+            "apiVersion": "v1",
+            "kind": "Service",
+            "metadata": {
+                "annotations": {
+                    "kubectl.kubernetes.io/last-applied-configuration": "{\"apiVersion\":\"v1\",\"kind\":\"Service\",\"metadata\":{\"annotations\":{\"prometheus.io/scrape\":\"true\"},\"labels\":{\"app.kubernetes.io/created-by\":\"resource-stack\",\"app.kubernetes.io/managed-by\":\"Lens\",\"app.kubernetes.io/name\":\"lens-metrics\"},\"name\":\"prometheus\",\"namespace\":\"lens-metrics\"},\"spec\":{\"ports\":[{\"name\":\"web\",\"port\":80,\"protocol\":\"TCP\",\"targetPort\":9090}],\"selector\":{\"name\":\"prometheus\"},\"type\":\"ClusterIP\"}}\n",
+                    "prometheus.io/scrape": "true"
+                },
+                "creationTimestamp": "2022-10-25T01:06:42Z",
+                "labels": {
+                    "app.kubernetes.io/created-by": "resource-stack",
+                    "app.kubernetes.io/managed-by": "Lens",
+                    "app.kubernetes.io/name": "lens-metrics"
+                },
+                "name": "prometheus",
+                "namespace": "lens-metrics",
+                "resourceVersion": "131083",
+                "uid": "a3dcae71-aac5-4718-83eb-5244c14225e4"
+            },
+            "spec": {
+                "clusterIP": "10.104.127.25",
+                "clusterIPs": [
+                    "10.104.127.25"
+                ],
+                "internalTrafficPolicy": "Cluster",
+                "ipFamilies": [
+                    "IPv4"
+                ],
+                "ipFamilyPolicy": "SingleStack",
+                "ports": [
+                    {
+                        "name": "web",
+                        "port": 80,
+                        "protocol": "TCP",
+                        "targetPort": 9090
+                    }
+                ],
+                "selector": {
+                    "name": "prometheus"
+                },
+                "sessionAffinity": "None",
+                "type": "ClusterIP"
+            },
+            "status": {
+                "loadBalancer": {}
+            }
+        }
+    ],
+    "kind": "List",
+    "metadata": {
+        "resourceVersion": ""
+    }
+}

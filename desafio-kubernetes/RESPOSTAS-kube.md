@@ -44,16 +44,13 @@ spec:
         - containerPort: 80
   updateStrategy:
     type: RollingUpdate
-
 ```
 
 ```bash
-$ kubectl create namespace desafio
-
-$ kubectl apply -f meu-spread.yaml -n desafio
+$ kubectl apply -f meu-spread.yaml
 daemonset.apps/meu-spread created
 
-$ kubectl get pods -n desafio  -o wide
+$ kubectl get pods -o wide
 NAME               READY   STATUS    RESTARTS   AGE     IP               NODE            NOMINATED NODE   READINESS GATES
 meu-spread-55lfg   1/1     Running   0          3m57s   192.168.77.179   master-node     <none>           <none>
 meu-spread-h624d   1/1     Running   0          3m57s   192.168.87.217   worker-node01   <none>           <none>
@@ -113,7 +110,7 @@ spec:
 ```
 
 ```bash
-$ kubectl apply -f meu-webserver-nginx-initcontainer.yaml -n desafio
+$ kubectl apply -f meu-webserver-nginx-initcontainer.yaml
 ```
 
 4 - crie um deploy chamado `meuweb` com a imagem `nginx:1.16` que seja executado exclusivamente no node master.
@@ -156,13 +153,12 @@ spec:
 
 ```bash
 
-$ kubectl apply -f meuweb-deploy-master.yaml -n desafio 
+$ kubectl apply -f meuweb-deploy-master.yaml
 deployment.apps/meuweb created
 
-$ kubectl get pods -n desafio  -o wide
+$ kubectl get pods -o wide
 NAME                      READY   STATUS    RESTARTS   AGE   IP               NODE          NOMINATED NODE   READINESS GATES
 meuweb-5d5bbb9c66-bz9q2   1/1     Running   0          16s   192.168.77.181   master-node   <none>           <none>
-
 ```
 
 
@@ -171,9 +167,8 @@ meuweb-5d5bbb9c66-bz9q2   1/1     Running   0          16s   192.168.77.181   ma
 *`Resposta:`*
 
 ```bash
-$ kubectl set image deploy meuweb  meuweb=nginx:1.19 -n desafio
+$ kubectl set image deploy meuweb  meuweb=nginx:1.19
 deployment.apps/meuweb image updated
-
 ```
 
 
@@ -253,9 +248,7 @@ $ kubectl expose deployment pombo --type NodePort --port 80
 service/pombo exposed
 
 $ kubectl create ingress pombo-ingress --rule="meuk8s.com/pombo=pombo:80"
-
 ```
-# `Finalizar questão`
 
 
 8 - linhas de comando para; 
@@ -271,7 +264,6 @@ deployment.apps/guardaroupa created
 
 $ kubectl expose deployment guardaroupa
 service/guardaroupa exposed
-
 ```
 
 
@@ -287,9 +279,65 @@ service/guardaroupa exposed
 
 *`Resposta:`*
 
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-data
+  namespace: backend
+  labels:
+    app: meusiteset
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: meusiteset
+  namespace: backend
+  labels:
+    app: meusiteset
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: meusiteset
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: meusiteset
+    spec:
+      containers:
+      - image: nginx
+        name: meusiteset
+        resources:
+          limits:
+            memory: "32Mi"
+            cpu: "50m"
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: pvc-data
+```
+
 ```bash
+$ kubectl create namespace backend
+namespace/backend created
 
-
+$ kubectl apply -f nginx-pvc.yaml 
+persistentvolumeclaim/pvc-data created
+deployment.apps/meusiteset configured
 ```
 
 
@@ -354,8 +402,7 @@ pod/balaclava-84cc447f47-vtzmm   1/1     Running   0          6m12s   balaclava 
 *`Resposta:`*
 
 ```bash
-
-
+kubectl get services -A -o=custom-columns='NAMESPACE:.metadata.namespace,NAME:.metadata.name,TYPE:.spec.type,CLUSTER-IP:.spec.clusterIP,EXTERNAL-IP:.status.loadBalancer.ingress[*].ip,PORT(S):.spec.ports[*].port,SELECTOR:.spec.selector' | egrep "NAMESPACE|LoadBalancer"
 ```
 
 
@@ -378,7 +425,6 @@ namespace/segredosdesucesso created
 
 $ kubectl create secret generic meusegredo --from-literal segredo=azul --from-file chave-secreta -n segredosdesucesso 
 secret/meusegredo created
-
 ```
 
 
@@ -392,7 +438,6 @@ namespace/site created
 
 $ kubectl create configmap configsite -n site --from-literal index.html="Euclides Alexander de Castro Junior"
 configmap/configsite created
-
 ```
 
 
@@ -446,7 +491,6 @@ aW54LGFwcC5rdWJlcm5ldGVzLmlvL25hbWU9aW5ncmVzcy1uZ
 
 $ kubectl exec -ti -n segredosdesucesso pods/meudeploy-5f6c78f88-77hrg -- cat /app/segredo
 azul
-
 ```
 
 
@@ -485,7 +529,6 @@ pod/depconfigs created
 
 $ kubectl exec -ti -n site pods/depconfigs -- cat /usr/share/nginx/html/index.html
 Euclides Alexander de Castro Junior
-
 ```
 
 
@@ -538,7 +581,6 @@ spec:
 ```bash
 $ kubectl apply -f meudeploy-2-secret.yaml 
 deployment.apps/meudeploy-2 created
-
 ```
 
 
@@ -564,7 +606,6 @@ secret/acesso created
 $ kubectl set env --from=secret/acesso deployment/cabelo
 Warning: key password transferred to PASSWORD
 Warning: key username transferred to USERNAME
-
 ```
 
 
@@ -572,9 +613,44 @@ Warning: key username transferred to USERNAME
 
 *`Resposta:`*
 
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis
+  namespace: cachehits
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      containers:
+      - name: redis
+        image: redis
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 6379
+        volumeMounts:
+        - mountPath: /data/redis
+          name: app-cache
+      volumes:
+      - name: app-cache
+        emptyDir: {}
+```
+
 ```bash
+$ kubectl create ns cachehits
+namespace/cachehits created
 
-
+$ kubectl apply -f redis-deploy-emptydir.yaml 
+deployment.apps/redis created
 ```
 
 
@@ -583,10 +659,8 @@ Warning: key username transferred to USERNAME
 *`Resposta:`*
 
 ```bash
-
 $ kubectl scale deployment -n azul basico --replicas 10
 deployment.apps/basico scaled
-
 ```
 
 
@@ -595,10 +669,8 @@ deployment.apps/basico scaled
 *`Resposta:`*
 
 ```bash
-
 $ kubectl autoscale deployment -n frontend site --min=2 --max=5 --cpu-percent=90
 horizontalpodautoscaler.autoscaling/site autoscaled
-
 ```
 
 
@@ -607,7 +679,6 @@ horizontalpodautoscaler.autoscaling/site autoscaled
 *`Resposta:`*
 
 ```bash
-
 $ kubectl get secret -n meussegredos piadas -o json | jq '.data | map_values(@base64d)'
 {
   "segredos": "olhaSohein!"
@@ -623,6 +694,17 @@ $ kubectl get secret -n meussegredos piadas -o json | jq '.data | map_values(@ba
 $ kubectl taint node k8s-worker1 chega:NoSchedule
 node/k8s-worker1 tainted
 
+# Voltando
+kubectl taint node k8s-worker1 chega:NoSchedule-
+node/worker-node01 untainted
+
+#ou
+$ kubectl cordon k8s-worker1
+node/worker-node01 cordoned
+
+# Voltando
+$ kubectl uncordon worker-node01
+node/worker-node01 uncordoned
 ```
 
 
@@ -633,6 +715,21 @@ node/k8s-worker1 tainted
 ```bash
 $ kubectl taint node k8s-worker1 vaza:NoExecute
 node/k8s-worker1 tainted
+
+# Voltando
+$ kubectl taint node k8s-worker1 vaza:NoExecute-
+node/k8s-worker1 untainted
+
+#ou
+
+$ kubectl drain k8s-worker1 --force --ignore-daemonsets
+node/k8s-worker1 cordoned
+Warning: ignoring DaemonSet-managed Pods: kube-system/calico-node-kj72q, kube-system/kube-proxy-dkw46, lens-metrics/node-exporter-ddcgt
+node/k8s-worker1 drained
+
+# Voltando
+$ kubectl uncordon k8s-worker1
+node/k8s-worker1 uncordoned
 
 ```
 
@@ -663,7 +760,6 @@ spec:
           containerPort: 80
           protocol: TCP
 EOF
-
 ```
 
 
@@ -671,19 +767,149 @@ EOF
 
 *`Resposta:`*
 
-```bash
-
-
+```yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: userx
+  namespace: developer
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: developer-role
+  namespace: developer
+rules:
+- apiGroups: ["", "extensions", "apps"]
+  resources: ["deployments", "replicasets", "pods", "pods/log"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"] # Pode ser usado ["*"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: developer-role-binding
+  namespace: developer
+subjects:
+- kind: ServiceAccount
+  name: userx
+  namespace: developer
+roleRef:
+  kind: Role
+  name: developer-role
+  apiGroup: rbac.authorization.k8s.io
 ```
 
+```bash
+$ kubectl create ns developer
+namespace/developer created
+
+$ kubectl apply -f userx-SA-Role-RB.yaml 
+serviceaccount/userx created
+role.rbac.authorization.k8s.io/developer-role created
+rolebinding.rbac.authorization.k8s.io/developer-role-binding created
+
+$ kubectl auth can-i get pods -n developer --as=system:serviceaccount:developer:userx
+yes
+$ kubectl auth can-i get deployments -n developer --as=system:serviceaccount:developer:userx
+yes
+$ kubectl auth can-i get pods/logs  -n developer --as=system:serviceaccount:developer:userx
+yes
+$ kubectl auth can-i create pods -n developer --as=system:serviceaccount:developer:userx
+yes
+$ kubectl auth can-i delete pods -n developer --as=system:serviceaccount:developer:userx
+yes
+$ kubectl auth can-i create deployments -n developer --as=system:serviceaccount:developer:userx
+yes
+$ kubectl auth can-i delete deployments -n developer --as=system:serviceaccount:developer:userx
+yes
+```
 
 26 - criar a key e certificado cliente para uma usuária chamada `jane` e que tenha permissão somente de listar pods no namespace `frontend`. liste os comandos utilizados.
 
 *`Resposta:`*
 
 ```bash
+#No computador / term logado como usuário jane
+openssl genrsa -out ./jane-k8s.key 4096
 
+openssl req \
+  -new 
+  -key ./jane-k8s.key \
+  -out ./jane-k8s.csr \
+  -subj "/CN=jane/O=frontend"
 
+$ cat ./jane-k8s.csr | base64 | tr -d '\n'
+```
+
+```yaml
+apiVersion: certificates.k8s.io/v1
+kind: CertificateSigningRequest
+metadata:
+  name: jane-csr
+spec:
+  request: <cole o base64 aqui>
+  signerName: kubernetes.io/kube-apiserver-client
+  expirationSeconds: 8640000
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+```
+
+```bash
+#No computador / term logado como usuário administrador
+$ kubectl apply -f jane-csr.yaml
+certificatesigningrequest.certificates.k8s.io/jane-csr created
+
+$ kubectl get csr
+NAME       AGE    SIGNERNAME                            REQUESTOR          REQUESTEDDURATION   CONDITION
+jane-csr   115s   kubernetes.io/kube-apiserver-client   kubernetes-admin   100d                Pending
+
+$ kubectl certificate approve jane-csr
+certificatesigningrequest.certificates.k8s.io/jane-csr approved
+
+$ kubectl get csr
+NAME       AGE     SIGNERNAME                            REQUESTOR          REQUESTEDDURATION   CONDITION
+jane-csr   3m35s   kubernetes.io/kube-apiserver-client   kubernetes-admin   100d                Approved,Issued
+
+$ kubectl get csr jane-csr -o jsonpath='{.status.certificate}' | base64 -d > jane-k8s.pem
+
+$ kubectl create ns frontend
+namespace/frontend created
+
+$ kubectl create role frontend --verb=list --resource=pods -n frontend
+
+$ kubectl get role -n frontend 
+NAME       CREATED AT
+frontend   2022-11-01T05:31:51Z
+
+$ kubectl create rolebinding frontend-binding-jane --role=frontend --user=jane -n frontend 
+rolebinding.rbac.authorization.k8s.io/frontend-binding-jane created
+```
+
+```bash
+#No computador / term logado como usuário jane
+$ kubectl config set-credentials jane \
+  --client-key jane-k8s.key \
+  --client-certificate jane-k8s.pem \
+  --embed-certs=true
+User "jane" set.
+
+# Ajustado campos "clusters:", "contexts:" e "current-context:" do arquivo ~./kube/config do usuário jane
+
+$ kubectl get pods -n frontend
+No resources found in frontend namespace.
+$ kubectl run pods -n frontend --image=nginx
+Error from server (Forbidden): pods is forbidden: User "jane" cannot create resource "pods" in API group "" in the namespace "frontend"
+
+# Criado um pod como adm para poder testar.
+$ kubectl get pods -n frontend
+NAME   READY   STATUS    RESTARTS   AGE
+pods   1/1     Running   0          7s
+$ kubectl get pods 
+Error from server (Forbidden): pods is forbidden: User "jane" cannot list resource "pods" in API group "" in the namespace "default"
+$ kubectl get pods -n azul
+Error from server (Forbidden): pods is forbidden: User "jane" cannot list resource "pods" in API group "" in the namespace "azul"
 ```
 
 
@@ -698,5 +924,4 @@ NAME                 STATUS    MESSAGE                         ERROR
 controller-manager   Healthy   ok                              
 scheduler            Healthy   ok                              
 etcd-0               Healthy   {"health":"true","reason":""}   
-
 ```
