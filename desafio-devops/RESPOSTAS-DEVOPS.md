@@ -1,125 +1,111 @@
-# Desafio Linux
+# Desafio DevOps
 
-As questões abaixo devem ser respondidas no arquivo [RESPOSTAS.md](RESPOSTAS.md) em um fork desse repositório.
-O formato é livre. Quanto mais sucinto e direto, melhor. Envie o endereço do seu repositório para desafio@getupcloud.com.
+Utilizando o repositório do app [podinfo](https://github.com/stefanprodan/podinfo) como base, crie um novo repositório
+com as seguintes features:
 
-# Preparação do ambiente
+O repositório deve conter o código para implementar as fetaures acima e screenshots com evidencias de
+todos os itens entregues.
 
-Sugerimos utilizar um sistema unix (linux, macos, \*bsd) ou [WSL](https://docs.microsoft.com/pt-br/windows/wsl/install).
+Utilize a versão que desejar para cada ferramenta.
+Envie a URL do seu repositório para desafio@getupcloud.com.
 
-Você precisa instalar o [VirtualBox](https://www.virtualbox.org) e opcionalmente (recomendado) o [Vagrant](https://www.vagrantup.com)
+### Respostas em: [https://gitlab.com/ecastrojr/desafio-devops/](https://gitlab.com/ecastrojr/desafio-devops/)
 
-Baixe esse repositório e execute:
-
-```
-git clone https://github.com/getupcloud/formando-devops.git
-cd desafio-linux
-vagrant up
-```
-
-Para entrar na VM e iniciar as tarefas, execute:
+## 1. Gitlab
 
 ```
-vagrant ssh
+  -> pipeline com build da imagem do app
+     -> [plus] linter do Dockerfile (tip: use o https://github.com/hadolint/hadolint)
+        -> falhar se houver severidade >= Warning
+  -> [plus] scan da imagem usando Trivy (https://github.com/aquasecurity/trivy) standalone (binário)
+     -> falhar se houver bug crítico
 ```
 
-O endereço IP público da VM pode ser obtido com o comando `ip addr show dev eth1`.
+Tips:
 
-Você pode reiniciar a VM a qualquer momento utilizando a GUI do próprio VirtualBox.
+- Instale o [GitLab CI/CD workflow agent](https://docs.gitlab.com/ee/user/clusters/agent/#gitlab-cicd-workflow) para fazer o build e aplicar os manifestos no cluster (caso não use fluxcd): https://docs.gitlab.com/ee/user/clusters/agent/install/
+- Para fazer o build da imagem, utilize como base o pipeline em https://gitlab.com/gitlab-org/gitlab-foss/-/blob/master/lib/gitlab/ci/templates/Docker.gitlab-ci.yml
+- Utilize o seguinte nome para a imagem: `$CI_REGISTRY/$SEU_USER_GITLAB/podinfo:$CI_COMMIT_SHORT_SHA`
 
-## 1. Kernel e Boot loader
+### Resposta: 
+Repositório: [https://gitlab.com/ecastrojr/desafio-devops/](https://gitlab.com/ecastrojr/desafio-devops/)
 
-O usuário `vagrant` está sem permissão para executar comandos root usando `sudo`.
-Sua tarefa consiste em reativar a permissão no `sudo` para esse usuário.
 
-Dica: lembre-se que você possui acesso "físico" ao host.
+- [x] [pipeline com build da imagem do app](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/.gitlab-ci.yml)
+- [x] [[plus] linter do Dockerfile e falhar se houver severidade >= Warning](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/.gitlab-ci.yml#6)
+- [x] [[plus] scan da imagem usando Trivy e falhar se houver bug crítico](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/.gitlab-ci.yml)
 
-## 2. Usuários
 
-### 2.1 Criação de usuários
-
-Crie um usuário com as seguintes características:
-
-- username: `getup` (UID=1111)
-- grupos: `getup` (principal, GID=2222) e `bin`
-- permissão `sudo` para todos os comandos, sem solicitação de senha
-
-## 3. SSH
-
-### 3.1 Autenticação confiável
-
-O servidor SSH está configurado para aceitar autenticação por senha. No entanto esse método é desencorajado
-pois apresenta alto nivel de fragilidade. Voce deve desativar autenticação por senhas e permitir apenas o uso
-de par de chaves.
-
-### 3.2 Criação de chaves
-
-Crie uma chave SSH do tipo ECDSA (qualquer tamanho) para o usuário `vagrant`. Em seguida, use essa mesma chave
-para acessar a VM.
-
-### 3.3 Análise de logs e configurações ssh
-
-Utilizando a chave do arquivo [id_rsa-desafio-linux-devel.gz.b64](id_rsa-desafio-linux-devel.gz.b64) deste repositório, acesse a VM com o usuário `devel`.
-
-Dica: o arquivo pode ter sido criado em um SO que trata o fim de linha de forma diferente.
-
-## 4. Systemd
-
-Identifique e corrija os erros na inicialização do servico `nginx`.
-Em seguida, execute o comando abaixo (exatamente como está) e apresente o resultado.
-Note que o comando não deve falhar.
+## 2. Terraform
 
 ```
-curl http://127.0.0.1
+  -> criar cluster kind
+  -> [plus] criar repo no gitlab
 ```
+### Resposta:
+Repositório: [https://gitlab.com/ecastrojr/desafio-devops/](https://gitlab.com/ecastrojr/desafio-devops/)
+- [x] [criar cluster kind](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/terraform/kind/kind_cluster.tf)
+- [x] [[plus] criar repo no gitlab](https://gitlab.com/ecastrojr/desafio-devops/-/tree/main/terraform/)
 
-Dica: para iniciar o serviço utilize o comando `systemctl start nginx`.
+`Criado Cluster Kind com terraform. Junto com o KinD é entregue o metrics-server, prometheus, grafana, alertmanager e loki configurados`
 
-## 5. SSL
+`No repositório tem um Vagrantfile onde é possível executar/replicar os testes do desafio`
 
-### 5.1 Criação de certificados
-
-Utilizando o comando de sua preferencia (openssl, cfssl, etc...) crie uma autoridade certificadora (CA) para o hostname `desafio.local`.
-Em seguida, utilizando esse CA para assinar, crie um certificado de web server para o hostname `www.desafio.local`.
-
-### 5.2 Uso de certificados
-
-Utilizando os certificados criados anteriormente, instale-os no serviço `nginx` de forma que este responda na porta `443` para o endereço
-`www.desafio.local`. Certifique-se que o comando abaixo executa com sucesso e responde o mesmo que o desafio `4`. Voce pode inserir flags no comando
-abaixo para utilizar seu CA.
+## 3. Kubernetes
 
 ```
-curl https://www.desafio.local
+  -> implementar no app
+     -> probes liveness e readiness
+     -> definir resource de cpu e memória
+  -> [plus] escalar app com base na métrica `requests_total`
+     -> escalar quando observar > 2 req/seg.
+  -> [plus] instalar app com fluxcd
+```
+### Resposta:
+Repositório: [https://gitlab.com/ecastrojr/desafio-devops/](https://gitlab.com/ecastrojr/desafio-devops/)
+- [x] [implementar no app, robes liveness e readiness e definir resource de cpu e memória](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/fluxcd/app/deployment.yaml)
+- [x] [[plus] escalar app com base na métrica `requests_total` e escalar quando observar > 2 req/seg.](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/fluxcd/app/hpa.yaml)
+- [x] [[plus] instalar app com fluxcd](https://gitlab.com/ecastrojr/desafio-devops/-/tree/main/fluxcd)
+
+` Criado arquivos para deploy do app com probes liveness e readiness através do flux, com HPA, service e monitoramento da métrica pelo prometheus`
+
+` Criado terraform para efetuar o deploy do flux e configurar o repositório com os arquivos do flux`
+
+`Testando o hpa:`
+
+```bash
+# k get horizontalpodautoscalers.autoscaling  -w
+NAME      REFERENCE            TARGETS   MINPODS   MAXPODS   REPLICAS   AGE
+podinfo   Deployment/podinfo   418m/2    2         10        2          4m6s
+podinfo   Deployment/podinfo   2481m/2   2         10        2          5m
+podinfo   Deployment/podinfo   3190m/2   2         10        3          5m15s
+podinfo   Deployment/podinfo   2236m/2   2         10        3          5m30s
+podinfo   Deployment/podinfo   1707m/2   2         10        4          5m45s
+podinfo   Deployment/podinfo   1093m/2   2         10        4          6m
+podinfo   Deployment/podinfo   490m/2    2         10        4          11m
+podinfo   Deployment/podinfo   502m/2    2         10        3          12m
+podinfo   Deployment/podinfo   514m/2    2         10        3          12m
+podinfo   Deployment/podinfo   563m/2    2         10        2          12m
 ```
 
-## 6. Rede
-
-### 6.1 Firewall
-
-Faço o comando abaixo funcionar:
+## 4. Observabilidade
 
 ```
-ping 8.8.8.8
+  -> prometheus stack (prometheus, grafana, alertmanager)
+  -> retenção de métricas 3 dias
+     -> storage local (disco), persistente
+  -> enviar alertas para um canal no telegram
+  -> logs centralizados (loki, no mesmo grafana do monitoramento)
+  -> [plus] monitorar métricas do app `request_duration_seconds`
+     -> alertar quando observar > 3 seg.
+  -> [plus] tracing (Open Telemetry)
 ```
+### Resposta:
+Repositório: [https://gitlab.com/ecastrojr/desafio-devops/](https://gitlab.com/ecastrojr/desafio-devops/)
+- [x] [prometheus stack (prometheus, grafana, alertmanager)](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/terraform/kind/prometheus_stack.tf)
+- [x] [retenção de métricas 3 dias com storage local (disco), persistente](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/terraform/kind/values-kube-prometheus-stack.yaml)
+- [x] [enviar alertas para um canal no telegram]()
+- [x] [logs centralizados (loki, no mesmo grafana do monitoramento)](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/terraform/kind/grafana_loki.tf)
+- [x] [[plus] monitorar métricas do app `request_duration_seconds` e alertar quando observar > 3 seg.](https://gitlab.com/ecastrojr/desafio-devops/-/blob/main/templates/imgs/alerta%20prometheus.png)  `faltou ajustes finais`
 
-### 6.2 HTTP
-
-Apresente a resposta completa, com headers, da URL `https://httpbin.org/response-headers?hello=world`
-
-## 7. Logs
-
-Configure o `logrotate` para rotacionar arquivos do diretório `/var/log/nginx`
-
-## 8. Filesystem
-
-### 8.1 Expandir partição LVM
-
-Aumente a partição LVM `sdb1` para `5Gi` e expanda o filesystem para o tamanho máximo.
-
-### 8.2 Criar partição LVM
-
-Crie uma partição LVM `sdb2` com `5Gi` e formate com o filesystem `ext4`.
-
-### 8.3 Criar partição XFS
-
-Utilizando o disco `sdc` em sua todalidade (sem particionamento), formate com o filesystem `xfs`.
+` Deploy do prometheus stack efetuado pelo terraform e helm`
